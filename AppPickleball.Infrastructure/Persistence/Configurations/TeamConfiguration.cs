@@ -24,5 +24,7 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
             .HasForeignKey(x => x.Player1Id).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Player2).WithMany()
             .HasForeignKey(x => x.Player2Id).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => x.Tournament.DeletedAt == null && x.Player1.DeletedAt == null && x.Player2.DeletedAt == null);
     }
 }

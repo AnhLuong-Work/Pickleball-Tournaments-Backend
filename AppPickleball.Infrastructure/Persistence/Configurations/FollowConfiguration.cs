@@ -17,5 +17,7 @@ public class FollowConfiguration : IEntityTypeConfiguration<Follow>
         builder.HasIndex(x => new { x.FollowerId, x.FollowingId }).IsUnique();
         builder.HasIndex(x => x.FollowerId);
         builder.HasIndex(x => x.FollowingId);
+        
+        builder.HasQueryFilter(x => x.Follower.DeletedAt == null && x.FollowingUser.DeletedAt == null);
     }
 }

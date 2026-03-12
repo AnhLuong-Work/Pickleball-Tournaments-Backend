@@ -28,5 +28,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
         builder.HasOne(x => x.ReplacedByToken).WithMany()
             .HasForeignKey(x => x.ReplacedByTokenId).OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasQueryFilter(x => x.User.DeletedAt == null);
     }
 }

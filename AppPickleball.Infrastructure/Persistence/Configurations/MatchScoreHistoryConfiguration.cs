@@ -26,5 +26,7 @@ public class MatchScoreHistoryConfiguration : IEntityTypeConfiguration<MatchScor
             .HasForeignKey(x => x.MatchId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.ModifiedByUser).WithMany()
             .HasForeignKey(x => x.ModifiedBy).OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasQueryFilter(x => x.Match.DeletedAt == null);
     }
 }

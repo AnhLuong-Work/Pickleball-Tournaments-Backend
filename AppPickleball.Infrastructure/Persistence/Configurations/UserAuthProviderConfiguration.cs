@@ -22,5 +22,7 @@ public class UserAuthProviderConfiguration : IEntityTypeConfiguration<UserAuthPr
 
         builder.HasIndex(x => new { x.Provider, x.ProviderUserId }).IsUnique();
         builder.HasIndex(x => new { x.UserId, x.Provider }).IsUnique();
+
+        builder.HasQueryFilter(x => x.User.DeletedAt == null);
     }
 }

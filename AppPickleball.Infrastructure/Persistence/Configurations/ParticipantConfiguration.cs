@@ -28,5 +28,7 @@ public class ParticipantConfiguration : IEntityTypeConfiguration<Participant>
             .HasForeignKey(x => x.InvitedBy).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(x => x.Tournament).WithMany(x => x.Participants)
             .HasForeignKey(x => x.TournamentId).OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => x.Tournament.DeletedAt == null && x.User.DeletedAt == null);
     }
 }

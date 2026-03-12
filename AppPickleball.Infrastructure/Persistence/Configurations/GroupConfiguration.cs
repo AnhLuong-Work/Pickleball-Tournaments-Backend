@@ -20,5 +20,7 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
 
         builder.HasOne(x => x.Tournament).WithMany(x => x.Groups)
             .HasForeignKey(x => x.TournamentId).OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => x.Tournament.DeletedAt == null);
     }
 }
