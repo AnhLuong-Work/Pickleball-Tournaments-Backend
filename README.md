@@ -1,280 +1,271 @@
-﻿# AppPickleball - Operator & Admin Management
+# AppPickleball — Backend API
 
-> **🎯 Mục đích:** Microservice quản lý Workspace, Subscriptions, Orders và Operator Panel, xây dựng theo Clean Architecture + CQRS pattern.
+> Hệ thống quản lý giải đấu Pickleball — đăng ký, tham gia giải, xếp bảng, nhập điểm, cộng đồng.
 
 ---
 
-## 📋 Mục Lục
+## Mục Lục
 
 - [Giới Thiệu](#giới-thiệu)
 - [Cấu Trúc Project](#cấu-trúc-project)
 - [Bắt Đầu Nhanh](#bắt-đầu-nhanh)
+- [Database & Migration](#database--migration)
+- [Docker](#docker)
 - [Công Nghệ Sử Dụng](#công-nghệ-sử-dụng)
+- [Các Lệnh Thường Dùng](#các-lệnh-thường-dùng)
+- [Best Practices](#best-practices)
 - [Tài Liệu](#tài-liệu)
 
 ---
 
-## 🎯 Giới Thiệu
+## Giới Thiệu
 
-**AppPickleball** là microservice quản lý workspace, gói cước, đơn hàng và vận hành hệ thống:
+**AppPickleball Backend** là REST API xây dựng theo **Clean Architecture + CQRS** với .NET 10:
 
-- ✅ Clean Architecture — 5 tầng rõ ràng
-- ✅ CQRS Pattern — Tách biệt Command/Query với MediatR
-- ✅ FluentValidation — Validation mạnh mẽ + localization
-- ✅ Repository + Unit of Work — Data access pattern
-- ✅ RabbitMQ (MassTransit) — Message queue
-- ✅ PostgreSQL — Database với UUID PKs
-- ✅ Multi-language — vi, en (IStringLocalizer)
-- ✅ Multi-tenant — Workspace isolation
-- ✅ Soft Delete — GlobalQueryFilter
+- Clean Architecture — 5 tầng tách biệt rõ ràng
+- CQRS Pattern — Command/Query tách biệt qua MediatR
+- EF Core Migrations — Quản lý schema database tự động
+- JWT Auth — Access token (15 phút) + Refresh token rotation (7 ngày)
+- Swagger/OpenAPI — Tài liệu API tự động với annotations
+- PostgreSQL — Database chính với UUID primary keys
+- FluentValidation — Validation pipeline tự động
+- Serilog — Structured logging
 
 ---
 
-## 🏗️ Cấu Trúc Project
+## Cấu Trúc Project
 
 ```
 AppPickleball/
-├── AppPickleball.Domain/          # Core — Entities, Enums, BaseEntity (no dependencies)
-├── AppPickleball.Application/     # Business logic — CQRS Commands/Queries/Handlers (MediatR)
-├── AppPickleball.Infrastructure/  # Data access — EF Core, Repositories, External services
-├── AppPickleball.Share/           # Shared — ApiResponse wrapper, Localization resources
-├── AppPickleball.Api/             # Presentation — Controllers, Middleware, Configurations
-└── Documents/                  # 📚 Tài liệu (Database schema, Coding convention, API docs)
+├── AppPickleball.Api/            # Presentation — Controllers, Middleware, DI Config
+├── AppPickleball.Application/    # Business Logic — CQRS Commands/Queries (MediatR)
+├── AppPickleball.Domain/         # Domain — Entities, Enums, BaseEntity
+├── AppPickleball.Infrastructure/ # Data Access — EF Core, Repositories, Email, JWT
+├── Shared.Kernel/                # Shared — ApiResponse wrapper, Wrappers
+└── AppPickleball.Tests/          # Tests — xUnit
 ```
 
-### Trách Nhiệm Từng Tầng
+### Layer Dependencies
 
-| Tầng | Trách Nhiệm | Phụ Thuộc |
-|------|-------------|-----------|
-| **Domain** | Entities, Enums, Base classes | Không phụ thuộc gì |
-| **Application** | Use cases, CQRS, Validation, Interfaces | Domain, Share |
-| **Infrastructure** | EF Core, Repositories, Email, Token services | Domain, Application |
-| **Share** | ApiResponse wrapper, Localization resources | Không phụ thuộc gì |
-| **Api** | Controllers, Middleware, DI Config | Application, Infrastructure |
+| Tầng | Phụ thuộc |
+|------|-----------|
+| **Domain** | Không phụ thuộc gì |
+| **Application** | Domain, Shared.Kernel |
+| **Infrastructure** | Application, Domain |
+| **Api** | Application, Infrastructure, Shared.Kernel |
 
 ---
 
-## 🚀 Bắt Đầu Nhanh
+## Bắt Đầu Nhanh
 
 ### Yêu Cầu
 
-- .NET 10 SDK
-- PostgreSQL (hoặc Docker)
-- RabbitMQ (tùy chọn)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- PostgreSQL 16+ (hoặc Docker)
+- dotnet-ef CLI: `dotnet tool install --global dotnet-ef`
 
 ### Chạy Local
 
-```powershell
-# 1. Restore dependencies
+```bash
+# 1. Clone & restore
 dotnet restore
 
-# 2. Cập nhật connection string trong appsettings.json
+# 2. Cấu hình connection string trong appsettings.Development.json
+# (xem mục Cấu Hình bên dưới)
 
-# 3. Tạo database bằng SQL script
-# Chạy Documents/Database_Documents/create_operator_database.sql trên PostgreSQL
+# 3. Tạo database và apply migrations
+dotnet ef database update --project AppPickleball.Infrastructure --startup-project AppPickleball.Api
 
-# 4. Chạy ứng dụng
+# 4. Chạy API
 dotnet run --project AppPickleball.Api
 ```
 
-> ⚠️ **Lưu ý:** Project **KHÔNG** sử dụng EF Core Migrations. Schema được quản lý thủ công qua SQL scripts trong `Documents/Database_Documents/`.
+API sẽ chạy tại:
+- `http://localhost:5000`
+- Swagger UI: `http://localhost:5000/swagger`
 
-### Chạy Với Docker
-
-```powershell
-docker-compose up -d
-```
+> **Lưu ý:** Khi chạy bình thường (không Docker), migrations được tự động apply khi API khởi động.
 
 ---
 
-## 💻 Phát Triển
+## Database & Migration
 
-### Thêm Feature Mới (CQRS Pattern)
+Project sử dụng **EF Core Migrations** để quản lý schema database.
 
-#### 1. Tạo Entity (Domain)
+### Cấu Hình Connection String
 
-```csharp
-// AppPickleball.Domain/Entities/Product.cs
-public class Product : BaseEntity
-{
-    public string Name { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-}
-```
-
-#### 2. Tạo Command + Handler (Application)
-
-```csharp
-// Command
-public record CreateProductCommand(string Name, decimal Price) : IRequest<ApiResponse<Guid>>;
-
-// Handler
-public class CreateProductCommandHandler(
-    IRepository<Product> repository,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateProductCommand, ApiResponse<Guid>>
-{
-    public async Task<ApiResponse<Guid>> Handle(CreateProductCommand request, CancellationToken ct)
-    {
-        var product = new Product { Name = request.Name, Price = request.Price };
-        await repository.AddAsync(product, ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return ApiResponse<Guid>.SuccessResponse(product.Id, "Product created");
-    }
-}
-
-// Validator
-public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
-{
-    public CreateProductCommandValidator(IStringLocalizer<SharedResource> localizer)
-    {
-        RuleFor(x => x.Name).NotEmpty().WithMessage(localizer["Validation_Name_Required"]);
-        RuleFor(x => x.Price).GreaterThan(0).WithMessage(localizer["Validation_Price_Positive"]);
-    }
-}
-```
-
-#### 3. Tạo Controller (API)
-
-```csharp
-[Route("api/products")]
-[ApiController]
-public class ProductsController : BaseApiController
-{
-    public ProductsController(IMediator mediator, ILogger<BaseApiController> logger)
-        : base(mediator, logger) { }
-
-    [HttpPost]
-    [SwaggerOperation(Summary = "Tạo sản phẩm")]
-    [ProducesResponseType(typeof(ApiResponse<Guid>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Create([FromBody] CreateProductCommand command)
-    {
-        var result = await _mediator.Send(command);
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
-}
-```
-
----
-
-## 🛠️ Công Nghệ Sử Dụng
-
-| Loại | Công Nghệ | Mục Đích |
-|------|-----------|----------|
-| **Framework** | .NET 10 | Nền tảng |
-| **Architecture** | Clean Architecture | Tách biệt concerns |
-| **API** | ASP.NET Core Web API | RESTful API |
-| **ORM** | Entity Framework Core 10 | Database access |
-| **Database** | PostgreSQL | Primary database |
-| **CQRS** | MediatR | Command/Query separation |
-| **Validation** | FluentValidation | Input validation |
-| **Message Queue** | RabbitMQ + MassTransit | Async messaging |
-| **Documentation** | Swagger/OpenAPI | API docs |
-| **Container** | Docker | Deployment |
-| **Logging** | Serilog | Structured logging |
-
----
-
-## ⚙️ Cấu Hình
-
-### Database
+`AppPickleball.Api/appsettings.Development.json`:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=operator_service_db;Username=operator_user;Password=yourpassword"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=apppickleball_db;Username=pickleball_user;Password=pickleball_pass"
   }
 }
 ```
 
-### RabbitMQ
+### Các Lệnh Migration
 
-```json
+```bash
+# Tạo migration mới (sau khi thay đổi Entity/Configuration)
+dotnet ef migrations add <TenMigration> \
+  --project AppPickleball.Infrastructure \
+  --startup-project AppPickleball.Api \
+  --output-dir Persistence/Migrations
+
+# Apply migration lên database
+dotnet ef database update \
+  --project AppPickleball.Infrastructure \
+  --startup-project AppPickleball.Api
+
+# Xem danh sách migrations
+dotnet ef migrations list \
+  --project AppPickleball.Infrastructure \
+  --startup-project AppPickleball.Api
+
+# Rollback về migration cụ thể
+dotnet ef database update <TenMigration> \
+  --project AppPickleball.Infrastructure \
+  --startup-project AppPickleball.Api
+
+# Xóa migration cuối (chưa apply)
+dotnet ef migrations remove \
+  --project AppPickleball.Infrastructure \
+  --startup-project AppPickleball.Api
+```
+
+### Auto-Migrate khi Startup
+
+API tự động apply pending migrations khi khởi động (cả khi chạy Docker):
+
+```csharp
+// Program.cs — tự động khi app start
+using (var scope = app.Services.CreateScope())
 {
-  "RabbitMQ": {
-    "Host": "localhost",
-    "Port": 5672,
-    "Username": "guest",
-    "Password": "guest"
-  }
+    var db = scope.ServiceProvider.GetRequiredService<AppPickleballDbContext>();
+    await db.Database.MigrateAsync();
 }
 ```
 
 ---
 
-## 📝 Các Lệnh Thường Dùng
+## Docker
 
-```powershell
-# Build & Run
-dotnet clean
-dotnet restore
-dotnet build
-dotnet run --project AppPickleball.Api
-dotnet watch --project AppPickleball.Api  # Auto-reload
+### Chạy với Docker Compose (Khuyến nghị cho Dev)
 
-# Docker
-docker build -f AppPickleball.Api/Dockerfile -t AppPickleball-api .
+```bash
+# Khởi động PostgreSQL + API
 docker-compose up -d
+
+# Xem logs
+docker-compose logs -f api
+
+# Dừng
+docker-compose down
+
+# Dừng và xóa data
+docker-compose down -v
+```
+
+Services:
+| Service | URL | Mô tả |
+|---------|-----|-------|
+| API | `http://localhost:5000` | REST API |
+| Swagger | `http://localhost:5000/swagger` | API Docs |
+| PostgreSQL | `localhost:5433` | DB (port 5433 tránh xung đột local) |
+
+DB credentials mặc định (chỉ dùng cho dev):
+- Database: `apppickleball_db`
+- Username: `pickleball_user`
+- Password: `pickleball_pass`
+
+### Build Docker Image riêng
+
+```bash
+# Build
+docker build -f AppPickleball.Api/Dockerfile -t apppickleball-api:latest .
+
+# Chạy
+docker run -p 5000:8080 \
+  -e ConnectionStrings__DefaultConnection="Host=localhost;..." \
+  apppickleball-api:latest
 ```
 
 ---
 
-## 🎯 Best Practices
+## Công Nghệ Sử Dụng
 
-### ✅ NÊN
-
-- Tuân thủ Clean Architecture
-- Sử dụng CQRS cho features
-- Validate input với FluentValidation
-- Map DTOs thủ công (không dùng AutoMapper)
-- Async/await cho I/O operations
-- Dependency injection
-- Controllers mỏng (delegate cho MediatR)
-- `DateTime.UtcNow` cho tất cả timestamps
-- `IStringLocalizer` cho user-facing messages
-
-### ❌ KHÔNG NÊN
-
-- Reference Infrastructure từ Domain
-- Business logic trong Controllers
-- Sử dụng entities trực tiếp trong responses
-- Hardcode configuration
-- Bỏ qua validation
-- Mix concerns giữa các tầng
-- Dùng `DateTime.Now` (luôn dùng `DateTime.UtcNow`)
-- Gọi `SaveChanges` trong Repository (dùng UnitOfWork)
+| Loại | Công Nghệ | Version |
+|------|-----------|---------|
+| Framework | .NET | 10 |
+| API | ASP.NET Core Web API | 10 |
+| ORM | Entity Framework Core | 10 |
+| Database | PostgreSQL | 16 |
+| CQRS | MediatR | latest |
+| Validation | FluentValidation | latest |
+| Documentation | Swashbuckle (Swagger) | 9.x |
+| Logging | Serilog | latest |
+| Auth | JWT Bearer | latest |
+| Container | Docker | — |
+| Testing | xUnit + Moq | latest |
 
 ---
 
-## 📚 Tài Liệu
+## Các Lệnh Thường Dùng
 
-| Tài liệu | Đường dẫn | Mô tả |
-|-----------|-----------|-------|
-| Database Schema | `Documents/Database_Documents/` | ERD, SQL scripts |
-| Coding Convention | `Documents/Coding_Convention_DotNet_PostgreSQL.md` | Quy chuẩn code |
-| API Functions | `Documents/API_Documents/` | Danh sách API |
-| Agent Skills Guide | `Documents/Agent_Skills_and_Team_Guide.md` | Hướng dẫn AI coding |
+```bash
+# Build
+dotnet clean && dotnet restore && dotnet build AppPickleball.slnx
 
----
+# Run (auto-migrate on start)
+dotnet run --project AppPickleball.Api
 
-## 🔧 Xử Lý Lỗi
+# Watch mode
+dotnet watch --project AppPickleball.Api
 
-### Lỗi Build
+# Tests
+dotnet test
 
-```powershell
-# Xóa bin và obj
+# Xóa bin/obj
 Get-ChildItem -Include bin,obj -Recurse -Directory | Remove-Item -Recurse -Force
-
-# Restore và rebuild
-dotnet restore
-dotnet build
 ```
-
-### Lỗi Database
-
-1. Kiểm tra PostgreSQL đang chạy
-2. Xác minh connection string
-3. Chạy SQL script trong `Documents/Database_Documents/create_operator_database.sql`
 
 ---
 
-**📄 MIT License** — Tự do sử dụng và chỉnh sửa
+## Best Practices
+
+### Thêm Feature Mới (CQRS)
+
+1. **Domain** — Thêm/sửa Entity trong `AppPickleball.Domain/Entities/`
+2. **EF Config** — `IEntityTypeConfiguration<T>` trong `Infrastructure/Persistence/Configurations/`
+3. **Migration** — `dotnet ef migrations add <Name> --project AppPickleball.Infrastructure --startup-project AppPickleball.Api --output-dir Persistence/Migrations`
+4. **Repository** — Interface trong `Application/Common/Interfaces/`, impl trong `Infrastructure/Persistence/Repositories/`
+5. **Command/Query** — `Application/Features/{Domain}/{Commands|Queries}/{Name}/`
+6. **Controller** — Kế thừa `BaseApiController`, thin controller, delegate qua `_mediator.Send()`
+
+### Quy Tắc Bắt Buộc
+
+| Rule | Chi tiết |
+|------|---------|
+| DateTime | Luôn `DateTime.UtcNow` — KHÔNG `DateTime.Now` |
+| Mapping | Map thủ công trong Handler — KHÔNG AutoMapper |
+| SaveChanges | Chỉ gọi qua `IUnitOfWork` — KHÔNG trong Repository |
+| Response | Luôn wrap `ApiResponse<T>` — KHÔNG trả raw object |
+| Controller | Thin — chỉ gọi `_mediator.Send()`, không có logic |
+
+---
+
+## Tài Liệu
+
+| Tài liệu | Đường dẫn |
+|-----------|-----------|
+| API Contracts | `Documents/API-CONTRACT/` |
+| Business Spec | `Documents/BA-SPEC/` |
+| Database Schema | `Documents/DATABASE/` |
+| Main Flows | `Documents/MAINFLOWS/` |
+| API Checker | `Documents/API-DEVELOP-CHECKER.md` |
+| Coding Convention | `Documents/Coding_Convention_DotNet_PostgreSQL.md` |
+
+---
+
+**MIT License**

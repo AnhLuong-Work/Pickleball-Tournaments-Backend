@@ -4,5 +4,4 @@
 public interface ICurrentUserService
 {
     Guid UserId { get; }
-    Guid WorkspaceId { get; }
 }

@@ -1,5 +1,6 @@
-﻿using AppPickleball.Application.Common.Interfaces;
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Common;
+using AppPickleball.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -8,6 +9,18 @@ namespace AppPickleball.Infrastructure.Persistence;
 public class AppPickleballDbContext : DbContext, IBaseDbContext
 {
     public AppPickleballDbContext(DbContextOptions<AppPickleballDbContext> options) : base(options) { }
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserAuthProvider> UserAuthProviders => Set<UserAuthProvider>();
+    public DbSet<Follow> Follows => Set<Follow>();
+    public DbSet<Tournament> Tournaments => Set<Tournament>();
+    public DbSet<Participant> Participants => Set<Participant>();
+    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<Group> Groups => Set<Group>();
+    public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
+    public DbSet<Match> Matches => Set<Match>();
+    public DbSet<MatchScoreHistory> MatchScoreHistories => Set<MatchScoreHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

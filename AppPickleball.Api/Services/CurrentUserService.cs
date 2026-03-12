@@ -32,24 +32,6 @@ namespace AppPickleball.Api.Services
             }
         }
 
-        public Guid WorkspaceId
-        {
-            get
-            {
-                // Ưu tiên lấy từ claim nếu token có workspace_id
-                var workspaceClaim = _httpContextAccessor.HttpContext?.User?.FindFirstValue("workspace_id");
-                if (Guid.TryParse(workspaceClaim, out var workspaceIdFromClaim))
-                    return workspaceIdFromClaim;
-
-                // Nếu không có claim thì fallback sang header X-Workspace-Id (gateway gửi về)
-                var workspaceHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-Workspace-Id"].FirstOrDefault();
-                if (Guid.TryParse(workspaceHeader, out var workspaceIdFromHeader))
-                    return workspaceIdFromHeader;
-
-                // WorkspaceId là bắt buộc, nên nếu không có thì ném lỗi
-                throw new InvalidOperationException("Workspace ID is not available in the current context.");
-            }
-        }
     }
 
 }

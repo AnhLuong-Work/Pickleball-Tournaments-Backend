@@ -1,34 +1,54 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
 
+  # ─── PostgreSQL ────────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: apppickleball-db
+    environment:
+      POSTGRES_DB: apppickleball_db
+      POSTGRES_USER: pickleball_user
+      POSTGRES_PASSWORD: pickleball_pass
+    ports:
+      - "5433:5432"   # 5433 để tránh xung đột với PostgreSQL local
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pickleball_user -d apppickleball_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apppickleball-net
+
+  # ─── API (với auto-migrate khi khởi động) ──────────────────────────────────────
   api:
     build:
       context: .
       dockerfile: ./AppPickleball.Api/Dockerfile
+    container_name: apppickleball-api
+    ports:
+      - "5000:8080"   # http://localhost:5000
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - TZ=Asia/Ho_Chi_Minh
+      ASPNETCORE_ENVIRONMENT: Development
+      TZ: Asia/Ho_Chi_Minh
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=apppickleball_db;Username=pickleball_user;Password=pickleball_pass"
+    depends_on:
+      db:
+        condition: service_healthy
     restart: on-failure
     logging:
       driver: "json-file"
       options:
-        max-size: "10m" # Giới hạn kích thước log file
-        max-file: "3"   # Số lượng file log tối đa
-    volumes:
-      - app-data:/app/data # Volume để lưu dữ liệu nếu cần
+        max-size: "10m"
+        max-file: "3"
     networks:
-      nextx-net:
-        aliases:
-          - auth
+      - apppickleball-net
 
-  # Dịch vụ Worker của bạn
-
-
-# Sử dụng mạng bên ngoài mà team bạn đã tạo
-networks:
-  nextx-net:
-    external: true
-    
 volumes:
-  app-data:
+  pg-data:
+
+networks:
+  apppickleball-net:
+    driver: bridge

@@ -14,18 +14,20 @@ namespace AppPickleball.Api.Configurations
                 // Định nghĩa tài liệu Swagger với version
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "AppPickleball.API",
+                    Title = "AppPickleball API",
                     Version = "v1",
-                    Description = "Operator Service — Workspace Management, Subscriptions, Orders"
+                    Description = "Pickleball Tournament Management — Auth, Tournaments, Matches, Community"
                 });
 
-                // 🏢 Header cho Workspace
-                c.AddSecurityDefinition("X-Workspace-Id", new OpenApiSecurityScheme
+                // JWT Bearer Auth
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Name = "X-Workspace-Id",
-                    Type = SecuritySchemeType.ApiKey,
-                    Description = "Workspace Id header (bắt buộc cho mỗi request)"
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    Description = "Nhập JWT token. Ví dụ: Bearer {token}"
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -36,9 +38,8 @@ namespace AppPickleball.Api.Configurations
                             Reference = new OpenApiReference
                             {
                                 Type = ReferenceType.SecurityScheme,
-                                Id = "X-Workspace-Id"
-                            },
-                            In = ParameterLocation.Header,
+                                Id = "Bearer"
+                            }
                         },
                         new List<string>()
                     }

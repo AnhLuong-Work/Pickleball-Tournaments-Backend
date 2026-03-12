@@ -2,6 +2,8 @@
 using AppPickleball.Api.Middleware;
 using AppPickleball.Application;
 using AppPickleball.Infrastructure;
+using AppPickleball.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text;
 
@@ -17,7 +19,7 @@ builder.Services.AddApiDependencies(config);
 builder.Services.AddApiControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerModule();
-builder.Services.AddMassTransitConfig(config);
+//builder.Services.AddMassTransitConfig(config);
 builder.Services.AddAppLocalization();
 builder.Services.AddCorsPolicy();
 builder.Services.AddHealthChecks(config);
@@ -28,6 +30,13 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(config);
 
 var app = builder.Build();
+
+// Auto-migrate khi khởi động (áp dụng pending migrations tự động)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppPickleballDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 // Correlation ID — phải đặt đầu tiên để track toàn bộ request lifecycle
