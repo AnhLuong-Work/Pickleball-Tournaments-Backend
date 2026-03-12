@@ -36,6 +36,7 @@ namespace AppPickleball.Infrastructure
             // Specific repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IUserAuthProviderRepository, UserAuthProviderRepository>();
             services.AddScoped<ITournamentRepository, TournamentRepository>();
             services.AddScoped<IParticipantRepository, ParticipantRepository>();
             services.AddScoped<ITeamRepository, TeamRepository>();
@@ -47,6 +48,12 @@ namespace AppPickleball.Infrastructure
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+            services.AddHttpClient<IFacebookAuthService, FacebookAuthService>();
+
+            // Settings
+            services.Configure<GoogleAuthSettings>(configuration.GetSection("GoogleAuth"));
+            services.Configure<FacebookAuthSettings>(configuration.GetSection("FacebookAuth"));
 
             // JWT Authentication
             var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()!;

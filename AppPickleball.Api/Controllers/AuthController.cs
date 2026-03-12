@@ -1,5 +1,7 @@
 using AppPickleball.Application.Features.Auth.Commands.ChangePassword;
+using AppPickleball.Application.Features.Auth.Commands.FacebookLogin;
 using AppPickleball.Application.Features.Auth.Commands.ForgotPassword;
+using AppPickleball.Application.Features.Auth.Commands.GoogleLogin;
 using AppPickleball.Application.Features.Auth.Commands.Login;
 using AppPickleball.Application.Features.Auth.Commands.RefreshToken;
 using AppPickleball.Application.Features.Auth.Commands.Register;
@@ -150,6 +152,43 @@ public class AuthController : BaseApi.BaseApiController
         var result = await _mediator.Send(new ResetPasswordCommand(request.Email, request.Otp, request.NewPassword), ct);
         return Ok(result);
     }
+
+    /// <summary>1.10 POST /auth/google-login — Đăng nhập bằng Google</summary>
+    [HttpPost("google-login")]
+    [AllowAnonymous]
+    [SwaggerOperation(
+        Summary = "Đăng nhập bằng Google SSO",
+        Description = "Xác thực ID Token từ Google SDK. Backend verify với Google, " +
+                      "tự động tạo tài khoản nếu chưa tồn tại. Trả về `isNewUser = true` nếu tài khoản vừa được tạo — " +
+                      "client nên redirect đến trang hoàn thiện hồ sơ. " +
+                      "Không cần đăng ký trước — luồng register + login gộp làm một.")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GoogleLoginCommand(request.IdToken), ct);
+        return Ok(result);
+    }
+
+    /// <summary>1.11 POST /auth/facebook-login — Đăng nhập bằng Facebook</summary>
+    [HttpPost("facebook-login")]
+    [AllowAnonymous]
+    [SwaggerOperation(
+        Summary = "Đăng nhập bằng Facebook SSO",
+        Description = "Xác thực Access Token từ Facebook SDK bằng Graph API. " +
+                      "Backend tự động tạo tài khoản nếu chưa tồn tại. " +
+                      "Nếu Facebook không cung cấp email (user từ chối cấp quyền), " +
+                      "tài khoản được tạo với placeholder email `fb_{id}@facebook.placeholder`. " +
+                      "Trả về `isNewUser = true` nếu tài khoản vừa được tạo.")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new FacebookLoginCommand(request.AccessToken), ct);
+        return Ok(result);
+    }
 }
 
 // Request DTOs
@@ -160,3 +199,5 @@ public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record VerifyEmailRequest(string Otp);
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Email, string Otp, string NewPassword);
+public record GoogleLoginRequest(string IdToken);
+public record FacebookLoginRequest(string AccessToken);
