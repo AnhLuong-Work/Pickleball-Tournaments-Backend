@@ -1,0 +1,15 @@
+﻿<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="docker-compose.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="AppPickleball.Api/AppPickleball.Api.csproj" Id="8e5e7e67-afaa-46a8-ba9f-fcc17344a34f" />
+  <Project Path="AppPickleball.Application/AppPickleball.Application.csproj" />
+  <Project Path="AppPickleball.Domain/AppPickleball.Domain.csproj" />
+  <Project Path="AppPickleball.Infrastructure/AppPickleball.Infrastructure.csproj" />
+  <Project Path="AppPickleball.Tests/AppPickleball.Tests.csproj" />
+  <Project Path="Shared.Kernel/Shared.Kernel.csproj" />
+</Solution>

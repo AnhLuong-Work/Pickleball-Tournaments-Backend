@@ -1,0 +1,34 @@
+﻿version: '3.8'
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: ./AppPickleball.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Asia/Ho_Chi_Minh
+    restart: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" # Giới hạn kích thước log file
+        max-file: "3"   # Số lượng file log tối đa
+    volumes:
+      - app-data:/app/data # Volume để lưu dữ liệu nếu cần
+    networks:
+      nextx-net:
+        aliases:
+          - auth
+
+  # Dịch vụ Worker của bạn
+
+
+# Sử dụng mạng bên ngoài mà team bạn đã tạo
+networks:
+  nextx-net:
+    external: true
+    
+volumes:
+  app-data:

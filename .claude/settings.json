@@ -1,0 +1,19 @@
+{
+  "userRules": [
+    "Luôn dùng DateTime.UtcNow — KHÔNG dùng DateTime.Now",
+    "KHÔNG dùng AutoMapper — dùng manual mapping trong Handler",
+    "KHÔNG dùng EF Core Migrations — schema quản lý qua SQL scripts",
+    "Không gọi SaveChanges trong repository — luôn qua IUnitOfWork",
+    "Luôn wrap response trong ApiResponse<T>",
+    "Messages dùng IStringLocalizer<SharedResource> — không hardcode string",
+    "EF Config: explicit HasColumnName() cho MỌI property",
+    "EF Config timestamp: HasDefaultValueSql(\"NOW() AT TIME ZONE 'UTC'\")",
+    "BaseEntity repos kế thừa cả IRepository<T> + ISoftDeletableRepository<T>",
+    "BaseCreatedEntity repos chỉ kế thừa IRepository<T>",
+    "1 class/interface = 1 file",
+    "Controllers phải thin — delegate logic cho MediatR Handler"
+  ],
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
