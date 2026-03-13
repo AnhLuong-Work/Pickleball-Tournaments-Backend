@@ -5,6 +5,8 @@ using AppPickleball.Application.Common.Settings;
 using AppPickleball.Application.Features.Auth.DTOs;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 using RefreshTokenEntity = AppPickleball.Domain.Entities.RefreshToken;
 
@@ -19,14 +21,16 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
     private readonly IJwtService _jwtService;
     private readonly ICurrentUserService _currentUser;
     private readonly AuthSettings _authSettings;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public ChangePasswordCommandHandler(IUserRepository userRepo, IRefreshTokenRepository refreshTokenRepo,
         IUnitOfWork uow, IPasswordHasher hasher, IJwtService jwtService,
-        ICurrentUserService currentUser, IOptions<AuthSettings> authSettings)
+        ICurrentUserService currentUser, IOptions<AuthSettings> authSettings, IStringLocalizer<SharedResource> localizer)
     {
         _userRepo = userRepo; _refreshTokenRepo = refreshTokenRepo;
         _uow = uow; _hasher = hasher; _jwtService = jwtService;
         _currentUser = currentUser; _authSettings = authSettings.Value;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<TokenResponseDto>> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -35,13 +39,13 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             ?? throw new NotFoundException("User không tồn tại");
 
         if (user.PasswordHash == null)
-            throw new DomainException("Tài khoản đăng nhập qua mạng xã hội không có mật khẩu");
+            throw new DomainException(_localizer["SocialAccount_NoPassword"]);
 
         if (!_hasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
-            throw new DomainException("Mật khẩu hiện tại không đúng");
+            throw new DomainException(_localizer["CurrentPassword_Invalid"]);
 
         if (_hasher.VerifyPassword(request.NewPassword, user.PasswordHash))
-            throw new DomainException("Mật khẩu mới không được trùng mật khẩu cũ");
+            throw new DomainException(_localizer["NewPassword_SameAsCurrent"]);
 
         user.PasswordHash = _hasher.HashPassword(request.NewPassword);
         _userRepo.Update(user);
@@ -63,6 +67,6 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         var accessToken = _jwtService.GenerateAccessToken(user);
         return ApiResponse<TokenResponseDto>.SuccessResponse(
             new TokenResponseDto(accessToken, rawToken, _authSettings.AccessTokenExpiryMinutes * 60),
-            "Đổi mật khẩu thành công");
+            _localizer["ChangePassword_Success"]);
     }
 }

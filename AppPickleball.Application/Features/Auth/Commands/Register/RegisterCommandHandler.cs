@@ -5,6 +5,8 @@ using AppPickleball.Application.Common.Settings;
 using AppPickleball.Application.Features.Auth.DTOs;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 using UserEntity = AppPickleball.Domain.Entities.User;
 using RefreshTokenEntity = AppPickleball.Domain.Entities.RefreshToken;
@@ -19,6 +21,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
     private readonly IPasswordHasher _hasher;
     private readonly IJwtService _jwtService;
     private readonly AuthSettings _authSettings;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public RegisterCommandHandler(
         IUserRepository userRepo,
@@ -26,7 +29,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
         IUnitOfWork uow,
         IPasswordHasher hasher,
         IJwtService jwtService,
-        IOptions<AuthSettings> authSettings)
+        IOptions<AuthSettings> authSettings,
+        IStringLocalizer<SharedResource> localizer)
     {
         _userRepo = userRepo;
         _refreshTokenRepo = refreshTokenRepo;
@@ -34,6 +38,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
         _hasher = hasher;
         _jwtService = jwtService;
         _authSettings = authSettings.Value;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -72,7 +77,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
             User: MapUser(user)
         );
 
-        return ApiResponse<AuthResponseDto>.SuccessResponse(response, "Đăng ký thành công", 201);
+        return ApiResponse<AuthResponseDto>.SuccessResponse(response, _localizer["Register_Success"], 201);
     }
 
     private static UserTokenDto MapUser(UserEntity u) => new(u.Id, u.Email, u.Name, u.AvatarUrl, u.SkillLevel, u.EmailVerified, u.CreatedAt);

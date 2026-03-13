@@ -5,6 +5,8 @@ using AppPickleball.Application.Features.Auth.DTOs;
 using AppPickleball.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 using UserEntity = AppPickleball.Domain.Entities.User;
 using RefreshTokenEntity = AppPickleball.Domain.Entities.RefreshToken;
@@ -21,6 +23,7 @@ public class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand,
     private readonly IUnitOfWork _uow;
     private readonly IJwtService _jwtService;
     private readonly AuthSettings _authSettings;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public FacebookLoginCommandHandler(
         IFacebookAuthService facebookAuth,
@@ -29,7 +32,8 @@ public class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand,
         IRefreshTokenRepository refreshTokenRepo,
         IUnitOfWork uow,
         IJwtService jwtService,
-        IOptions<AuthSettings> authSettings)
+        IOptions<AuthSettings> authSettings,
+        IStringLocalizer<SharedResource> localizer)
     {
         _facebookAuth = facebookAuth;
         _userRepo = userRepo;
@@ -38,6 +42,7 @@ public class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand,
         _uow = uow;
         _jwtService = jwtService;
         _authSettings = authSettings.Value;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<AuthResponseDto>> Handle(FacebookLoginCommand request, CancellationToken cancellationToken)
@@ -137,7 +142,7 @@ public class FacebookLoginCommandHandler : IRequestHandler<FacebookLoginCommand,
             _authSettings.AccessTokenExpiryMinutes * 60,
             MapUser(user), isNewUser);
 
-        return ApiResponse<AuthResponseDto>.SuccessResponse(response, "Đăng nhập Facebook thành công");
+        return ApiResponse<AuthResponseDto>.SuccessResponse(response, _localizer["FacebookLogin_Success"]);
     }
 
     private static UserTokenDto MapUser(UserEntity u) =>

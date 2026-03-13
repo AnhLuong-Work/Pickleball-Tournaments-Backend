@@ -1,7 +1,9 @@
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
 using MediatR;
+using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 
 namespace AppPickleball.Application.Features.Auth.Commands.ForgotPassword;
@@ -11,10 +13,12 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
     private readonly IUserRepository _userRepo;
     private readonly IUnitOfWork _uow;
     private readonly IEmailService _emailService;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public ForgotPasswordCommandHandler(IUserRepository userRepo, IUnitOfWork uow, IEmailService emailService)
+    public ForgotPasswordCommandHandler(IUserRepository userRepo, IUnitOfWork uow, IEmailService emailService, IStringLocalizer<SharedResource> localizer)
     {
         _userRepo = userRepo; _uow = uow; _emailService = emailService;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<ForgotPasswordResponseDto>> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
@@ -24,7 +28,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         // Không tiết lộ email có tồn tại hay không (security best practice)
         if (user == null)
             return ApiResponse<ForgotPasswordResponseDto>.SuccessResponse(
-                new ForgotPasswordResponseDto("Nếu email tồn tại, OTP đã được gửi đến hộp thư của bạn", 600));
+                new ForgotPasswordResponseDto(_localizer["ForgotPassword_Success"], 600));
 
         // Generate 6-digit OTP
         var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
@@ -41,6 +45,6 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             cancellationToken);
 
         return ApiResponse<ForgotPasswordResponseDto>.SuccessResponse(
-            new ForgotPasswordResponseDto("Nếu email tồn tại, OTP đã được gửi đến hộp thư của bạn", 600));
+            new ForgotPasswordResponseDto(_localizer["ForgotPassword_Success"], 600));
     }
 }

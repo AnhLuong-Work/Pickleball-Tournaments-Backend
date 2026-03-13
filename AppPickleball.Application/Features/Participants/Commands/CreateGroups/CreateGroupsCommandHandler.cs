@@ -5,6 +5,8 @@ using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 
 namespace AppPickleball.Application.Features.Participants.Commands.CreateGroups;
@@ -18,13 +20,15 @@ public class CreateGroupsCommandHandler : IRequestHandler<CreateGroupsCommand, A
     private readonly IBaseDbContext _db;
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public CreateGroupsCommandHandler(ITournamentRepository tournamentRepo, IGroupRepository groupRepo,
         IMatchRepository matchRepo, IParticipantRepository participantRepo, IBaseDbContext db,
-        IUnitOfWork uow, ICurrentUserService currentUser)
+        IUnitOfWork uow, ICurrentUserService currentUser, IStringLocalizer<SharedResource> localizer)
     {
         _tournamentRepo = tournamentRepo; _groupRepo = groupRepo; _matchRepo = matchRepo;
         _participantRepo = participantRepo; _db = db; _uow = uow; _currentUser = currentUser;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<CreateGroupsResultDto>> Handle(CreateGroupsCommand request, CancellationToken cancellationToken)
@@ -33,7 +37,7 @@ public class CreateGroupsCommandHandler : IRequestHandler<CreateGroupsCommand, A
             ?? throw new NotFoundException("Giải đấu không tồn tại");
 
         if (tournament.CreatorId != _currentUser.UserId)
-            throw new UnauthorizedException("Chỉ người tạo giải mới có thể xếp bảng");
+            throw new UnauthorizedException(_localizer["Tournament_Creator_Only"]);
 
         if (request.Mode == "random")
         {
@@ -54,11 +58,11 @@ public class CreateGroupsCommandHandler : IRequestHandler<CreateGroupsCommand, A
 
         // Manual mode — validate and save
         if (request.Groups == null || request.Groups.Count != tournament.NumGroups)
-            throw new DomainException($"Phải xếp đủ {tournament.NumGroups} bảng");
+            throw new DomainException(_localizer["Groups_InvalidCount"]);
 
         foreach (var g in request.Groups)
             if (g.MemberIds.Count != 4)
-                throw new DomainException($"Bảng {g.Name} phải có đúng 4 thành viên");
+                throw new DomainException(_localizer["Group_InvalidSize"]);
 
         var allMemberIds = request.Groups.SelectMany(g => g.MemberIds).ToList();
         if (allMemberIds.Distinct().Count() != allMemberIds.Count)
@@ -142,6 +146,6 @@ public class CreateGroupsCommandHandler : IRequestHandler<CreateGroupsCommand, A
 
         return ApiResponse<CreateGroupsResultDto>.SuccessResponse(
             new CreateGroupsResultDto(true, groupDtos, matchDtos, createdMatches.Count),
-            "Xếp bảng và tạo lịch thi đấu thành công", 201);
+            _localizer["CreateGroups_Success"], 201);
     }
 }

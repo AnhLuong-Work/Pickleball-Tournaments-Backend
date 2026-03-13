@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(dotnet build:*)",
+      "Bash(git reset:*)",
+      "Bash(find /d/WorkPersonal/Projects/AppPick/BackEnd -name \"*DependencyInjection*\" -o -name \"*DI*\" | grep -E \"\\\\.\\(cs|csproj\\)$\")",
+      "Bash(pkill -9 -f \"AppPickleball.Api|dotnet\" || true && sleep 2 && dotnet build AppPickleball.slnx 2>&1 | tail -50)"
+    ]
+  }
+}

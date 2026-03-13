@@ -5,6 +5,8 @@ using AppPickleball.Application.Features.Matches.DTOs;
 using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 
 namespace AppPickleball.Application.Features.Matches.Commands.UpdateScore;
@@ -17,12 +19,14 @@ public class UpdateMatchScoreCommandHandler : IRequestHandler<UpdateMatchScoreCo
     private readonly IBaseDbContext _db;
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public UpdateMatchScoreCommandHandler(IMatchRepository matchRepo, ITournamentRepository tournamentRepo,
-        IGroupRepository groupRepo, IBaseDbContext db, IUnitOfWork uow, ICurrentUserService currentUser)
+        IGroupRepository groupRepo, IBaseDbContext db, IUnitOfWork uow, ICurrentUserService currentUser, IStringLocalizer<SharedResource> localizer)
     {
         _matchRepo = matchRepo; _tournamentRepo = tournamentRepo; _groupRepo = groupRepo;
         _db = db; _uow = uow; _currentUser = currentUser;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<MatchDto>> Handle(UpdateMatchScoreCommand request, CancellationToken cancellationToken)
@@ -34,13 +38,13 @@ public class UpdateMatchScoreCommandHandler : IRequestHandler<UpdateMatchScoreCo
             ?? throw new NotFoundException("Giải đấu không tồn tại");
 
         if (tournament.CreatorId != _currentUser.UserId)
-            throw new UnauthorizedException("Chỉ người tạo giải mới có thể sửa điểm");
+            throw new UnauthorizedException(_localizer["Tournament_Creator_Only"]);
 
         if (match.Status != MatchStatus.Completed)
-            throw new DomainException("Chỉ có thể sửa điểm của trận đã hoàn thành");
+            throw new DomainException(_localizer["Match_CannotEditScore"]);
 
         if (request.Player1Scores.Length != request.Player2Scores.Length)
-            throw new DomainException("Số set Player 1 và Player 2 phải bằng nhau");
+            throw new DomainException(_localizer["Match_InvalidSetCount"]);
 
         // Lưu lịch sử điểm trước khi cập nhật
         var history = new MatchScoreHistory
@@ -72,6 +76,6 @@ public class UpdateMatchScoreCommandHandler : IRequestHandler<UpdateMatchScoreCo
             match.Player1Id, match.Player2Id, match.Player1Scores, match.Player2Scores,
             match.WinnerId, match.Status.ToString().ToLower());
 
-        return ApiResponse<MatchDto>.SuccessResponse(dto, "Cập nhật điểm thành công");
+        return ApiResponse<MatchDto>.SuccessResponse(dto, _localizer["UpdateScore_Success"]);
     }
 }

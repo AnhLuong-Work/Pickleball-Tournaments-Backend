@@ -2,7 +2,9 @@ using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
 using MediatR;
+using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 
 namespace AppPickleball.Application.Features.Auth.Commands.SendEmailVerification;
@@ -13,12 +15,14 @@ public class SendEmailVerificationCommandHandler : IRequestHandler<SendEmailVeri
     private readonly IUnitOfWork _uow;
     private readonly IEmailService _emailService;
     private readonly ICurrentUserService _currentUser;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public SendEmailVerificationCommandHandler(IUserRepository userRepo, IUnitOfWork uow,
-        IEmailService emailService, ICurrentUserService currentUser)
+        IEmailService emailService, ICurrentUserService currentUser, IStringLocalizer<SharedResource> localizer)
     {
         _userRepo = userRepo; _uow = uow;
         _emailService = emailService; _currentUser = currentUser;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<SendVerificationResponseDto>> Handle(SendEmailVerificationCommand request, CancellationToken cancellationToken)
@@ -27,7 +31,7 @@ public class SendEmailVerificationCommandHandler : IRequestHandler<SendEmailVeri
             ?? throw new NotFoundException("User không tồn tại");
 
         if (user.EmailVerified)
-            throw new DomainException("Email đã được xác thực");
+            throw new DomainException(_localizer["Email_AlreadyVerified"]);
 
         // Generate 6-digit OTP
         var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
@@ -44,6 +48,6 @@ public class SendEmailVerificationCommandHandler : IRequestHandler<SendEmailVeri
             cancellationToken);
 
         return ApiResponse<SendVerificationResponseDto>.SuccessResponse(
-            new SendVerificationResponseDto("OTP đã được gửi đến email của bạn", 600));
+            new SendVerificationResponseDto(_localizer["SendVerification_Success"], 600));
     }
 }

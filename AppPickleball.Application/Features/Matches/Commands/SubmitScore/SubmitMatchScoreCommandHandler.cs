@@ -5,6 +5,8 @@ using AppPickleball.Application.Features.Matches.DTOs;
 using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Localization;
+using Shared.Kernel.Resources;
 using Shared.Kernel.Wrappers;
 
 namespace AppPickleball.Application.Features.Matches.Commands.SubmitScore;
@@ -17,12 +19,14 @@ public class SubmitMatchScoreCommandHandler : IRequestHandler<SubmitMatchScoreCo
     private readonly IBaseDbContext _db;
     private readonly IUnitOfWork _uow;
     private readonly ICurrentUserService _currentUser;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
     public SubmitMatchScoreCommandHandler(IMatchRepository matchRepo, ITournamentRepository tournamentRepo,
-        IGroupRepository groupRepo, IBaseDbContext db, IUnitOfWork uow, ICurrentUserService currentUser)
+        IGroupRepository groupRepo, IBaseDbContext db, IUnitOfWork uow, ICurrentUserService currentUser, IStringLocalizer<SharedResource> localizer)
     {
         _matchRepo = matchRepo; _tournamentRepo = tournamentRepo; _groupRepo = groupRepo;
         _db = db; _uow = uow; _currentUser = currentUser;
+        _localizer = localizer;
     }
 
     public async Task<ApiResponse<MatchDto>> Handle(SubmitMatchScoreCommand request, CancellationToken cancellationToken)
@@ -34,10 +38,10 @@ public class SubmitMatchScoreCommandHandler : IRequestHandler<SubmitMatchScoreCo
             ?? throw new NotFoundException("Giải đấu không tồn tại");
 
         if (tournament.CreatorId != _currentUser.UserId)
-            throw new UnauthorizedException("Chỉ người tạo giải mới có thể nhập điểm");
+            throw new UnauthorizedException(_localizer["Tournament_Creator_Only"]);
 
         if (match.Status == MatchStatus.Completed)
-            throw new DomainException("Trận đấu đã có kết quả. Dùng PUT để sửa điểm");
+            throw new DomainException(_localizer["Match_AlreadyHasScore"]);
 
         // Xác định người thắng dựa trên số set thắng
         var p1Sets = request.Player1Scores.Zip(request.Player2Scores).Count(pair => pair.First > pair.Second);
