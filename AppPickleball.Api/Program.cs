@@ -16,6 +16,8 @@ builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddApiDependencies(config);
+builder.Services.AddJwtSettings(config);
+builder.Services.AddAllSettings(config);
 builder.Services.AddApiControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerModule();
@@ -48,6 +50,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseAppLocalization();
 app.UseHttpsRedirection();
+app.UseCors("AllowWebClients");
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

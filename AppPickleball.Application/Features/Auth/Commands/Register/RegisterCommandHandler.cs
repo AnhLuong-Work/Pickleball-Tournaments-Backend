@@ -47,7 +47,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
             PasswordHash = _hasher.HashPassword(request.Password),
             Name = request.Name.Trim(),
             SkillLevel = 3.0m,
-            EmailVerified = false
+            EmailVerified = true
         };
 
         await _userRepo.AddAsync(user, cancellationToken);
