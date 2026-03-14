@@ -9,7 +9,7 @@ namespace AppPickleball.Api.Configurations
             services.Configure<EmailSettings>(config.GetSection("EmailSettings"));
             services.Configure<AuthSettings>(config.GetSection("AuthSettings"));
             services.Configure<RabbitMQSettings>(config.GetSection("RabbitMQ"));
-            services.Configure<GoogleAuthSettings>(config.GetSection("GoogleAuth"));
+            // GoogleAuthSettings và FacebookAuthSettings được đăng ký trong Infrastructure/DependencyInjection
 
             return services;
         }

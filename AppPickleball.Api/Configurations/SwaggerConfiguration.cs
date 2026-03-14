@@ -1,5 +1,6 @@
 ﻿using AppPickleball.Api.Filters;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AppPickleball.Api.Configurations
 {
@@ -44,11 +45,11 @@ namespace AppPickleball.Api.Configurations
                         new List<string>()
                     }
                 });
-                // Bộ lọc thêm header Accept-Language
+                // Thêm header Accept-Language vào mọi endpoint
                 c.OperationFilter<AcceptLanguageHeaderOperationFilter>();
-                // Cho phép sử dụng chú thích
+                // Xóa lock icon khỏi endpoint [AllowAnonymous]
+                c.OperationFilter<SwaggerAllowAnonymousFilter>();
                 c.EnableAnnotations();
-                // Hiện thị enum inline
                 c.UseInlineDefinitionsForEnums();
             });
 

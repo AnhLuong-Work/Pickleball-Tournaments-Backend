@@ -7,6 +7,12 @@ using System.Text;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
 using AppPickleball.Application.Common.Settings;
+using AppPickleball.Application.Features.Auth.Interfaces;
+using AppPickleball.Application.Features.Matches.Interfaces;
+using AppPickleball.Application.Features.Participants.Interfaces;
+using AppPickleball.Application.Features.Teams.Interfaces;
+using AppPickleball.Application.Features.Tournaments.Interfaces;
+using AppPickleball.Application.Features.Users.Interfaces;
 using AppPickleball.Infrastructure.Persistence;
 using AppPickleball.Infrastructure.Persistence.Repositories;
 using AppPickleball.Infrastructure.Services;
@@ -51,7 +57,8 @@ namespace AppPickleball.Infrastructure
             services.AddScoped<IGoogleAuthService, GoogleAuthService>();
             services.AddHttpClient<IFacebookAuthService, FacebookAuthService>();
 
-            // Settings
+            // Settings — tập trung tại Infrastructure để tránh đăng ký phân tán
+            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
             services.Configure<GoogleAuthSettings>(configuration.GetSection("GoogleAuth"));
             services.Configure<FacebookAuthSettings>(configuration.GetSection("FacebookAuth"));
 

@@ -1,4 +1,5 @@
 using AppPickleball.Application.Common.Interfaces;
+using AppPickleball.Application.Features.Users.Interfaces;
 using AppPickleball.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

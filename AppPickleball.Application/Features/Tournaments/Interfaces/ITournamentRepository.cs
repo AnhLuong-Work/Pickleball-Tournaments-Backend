@@ -1,7 +1,8 @@
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
 
-namespace AppPickleball.Application.Common.Interfaces;
+namespace AppPickleball.Application.Features.Tournaments.Interfaces;
 
 public interface ITournamentRepository : IRepository<Tournament>, ISoftDeletableRepository<Tournament>
 {

@@ -74,7 +74,7 @@ public class TournamentController : BaseApi.BaseApiController
         var result = await _mediator.Send(
             new CreateTournamentCommand(request.Name, request.Description, request.Type, request.NumGroups,
                 request.ScoringFormat, request.Date, request.Location), ct);
-        return StatusCode(201, result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     /// <summary>3.3 GET /tournaments/:id — Chi tiết giải đấu</summary>
@@ -125,7 +125,7 @@ public class TournamentController : BaseApi.BaseApiController
     public async Task<IActionResult> CancelTournament(Guid id, [FromBody] CancelTournamentRequest? request, CancellationToken ct)
     {
         var result = await _mediator.Send(new CancelTournamentCommand(id, request?.Reason), ct);
-        return StatusCode(204, result);
+        return result.Success ? StatusCode(204, result) : BadRequest(result);
     }
 
     /// <summary>3.6 PATCH /tournaments/:id/status — Chuyển trạng thái</summary>
@@ -177,7 +177,7 @@ public class TournamentController : BaseApi.BaseApiController
     public async Task<IActionResult> RequestJoin(Guid id, CancellationToken ct)
     {
         var result = await _mediator.Send(new RequestJoinTournamentCommand(id), ct);
-        return StatusCode(201, result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     /// <summary>4.3 POST /tournaments/:id/invite — Mời người chơi</summary>
@@ -230,7 +230,7 @@ public class TournamentController : BaseApi.BaseApiController
     {
         var groupInputs = request.Groups?.Select(g => new GroupInput(g.Name, g.MemberIds)).ToList();
         var result = await _mediator.Send(new CreateGroupsCommand(id, request.Mode, groupInputs), ct);
-        return StatusCode(201, result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     /// <summary>4.6 POST /tournaments/:id/teams — Tạo teams cho Doubles</summary>
@@ -249,18 +249,6 @@ public class TournamentController : BaseApi.BaseApiController
     {
         var teams = request.Teams.Select(t => new TeamInput(t.Name, t.Player1Id, t.Player2Id)).ToList();
         var result = await _mediator.Send(new CreateTeamsCommand(id, teams), ct);
-        return StatusCode(201, result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 }
-
-// Request DTOs
-public record CreateTournamentRequest(string Name, string? Description, string Type, int NumGroups, string? ScoringFormat, string? Date, string? Location);
-public record UpdateTournamentRequest(string? Name, string? Description, string? Type, int? NumGroups, string? ScoringFormat, string? Date, string? Location);
-public record CancelTournamentRequest(string? Reason);
-public record UpdateStatusRequest(string Status);
-public record InviteRequest(List<Guid> UserIds);
-public record RespondRequest(string Action, string? Reason);
-public record CreateGroupsRequest(string Mode, List<GroupInputRequest>? Groups);
-public record GroupInputRequest(string Name, List<Guid> MemberIds);
-public record CreateTeamsRequest(List<TeamInputRequest> Teams);
-public record TeamInputRequest(string Name, Guid Player1Id, Guid Player2Id);

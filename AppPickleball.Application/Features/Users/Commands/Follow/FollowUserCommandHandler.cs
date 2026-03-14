@@ -1,6 +1,7 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
+using AppPickleball.Application.Features.Users.Interfaces;
 using MediatR;
 using Shared.Kernel.Wrappers;
 using FollowEntity = AppPickleball.Domain.Entities.Follow;

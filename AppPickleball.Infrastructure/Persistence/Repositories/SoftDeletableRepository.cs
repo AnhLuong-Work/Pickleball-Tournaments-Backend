@@ -1,21 +1,13 @@
-﻿using AppPickleball.Application.Common.Interfaces;
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace AppPickleball.Infrastructure.Persistence.Repositories;
 
-// Soft delete repository — CHỈ cho entities kế thừa BaseEntity
-// Constraint where T : BaseEntity = compile-time safety (không thể gọi SoftDelete trên BaseCreatedEntity)
-public class SoftDeletableRepository<T> : ISoftDeletableRepository<T> where T : BaseEntity
+// Soft delete repository — extends Repository<T> so concrete repos only need one base class
+public class SoftDeletableRepository<T> : Repository<T>, ISoftDeletableRepository<T> where T : BaseEntity
 {
-    private readonly AppPickleballDbContext _context;
-    private readonly DbSet<T> _dbSet;
-
-    public SoftDeletableRepository(AppPickleballDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
+    public SoftDeletableRepository(AppPickleballDbContext context) : base(context) { }
 
     public virtual void SoftDelete(T entity, Guid deletedBy)
     {

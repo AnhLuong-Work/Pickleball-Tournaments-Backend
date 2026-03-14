@@ -1,6 +1,7 @@
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Entities;
 
-namespace AppPickleball.Application.Common.Interfaces;
+namespace AppPickleball.Application.Features.Participants.Interfaces;
 
 public interface IGroupRepository : IRepository<Group>
 {

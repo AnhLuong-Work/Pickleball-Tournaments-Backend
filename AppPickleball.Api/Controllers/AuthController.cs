@@ -1,3 +1,4 @@
+using AppPickleball.Api.Configurations;
 using AppPickleball.Application.Features.Auth.Commands.ChangePassword;
 using AppPickleball.Application.Features.Auth.Commands.FacebookLogin;
 using AppPickleball.Application.Features.Auth.Commands.ForgotPassword;
@@ -12,6 +13,7 @@ using AppPickleball.Application.Features.Auth.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Shared.Kernel.Wrappers;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -29,6 +31,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.1 POST /auth/register — Đăng ký tài khoản</summary>
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.AuthPolicy)]
     [SwaggerOperation(
         Summary = "Đăng ký tài khoản mới",
         Description = "Tạo tài khoản mới bằng email và mật khẩu. Sau khi đăng ký thành công, gửi OTP xác thực email qua `/auth/send-verification`.")]
@@ -38,12 +41,13 @@ public class AuthController : BaseApi.BaseApiController
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
         var result = await _mediator.Send(new RegisterCommand(request.Email, request.Password, request.Name), ct);
-        return StatusCode(201, result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     /// <summary>1.2 POST /auth/login — Đăng nhập</summary>
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.AuthPolicy)]
     [SwaggerOperation(
         Summary = "Đăng nhập",
         Description = "Xác thực email/password, trả về access token (15 phút) và refresh token (7 ngày). " +
@@ -92,6 +96,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.6 POST /auth/send-verification — Gửi OTP xác thực email</summary>
     [HttpPost("send-verification")]
     [Authorize]
+    [EnableRateLimiting(RateLimiterConfiguration.OtpPolicy)]
     [SwaggerOperation(
         Summary = "Gửi OTP xác thực email",
         Description = "Gửi mã OTP 6 số đến email của tài khoản hiện tại. OTP có hiệu lực 10 phút. " +
@@ -108,6 +113,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.7 POST /auth/verify-email — Xác thực email bằng OTP</summary>
     [HttpPost("verify-email")]
     [Authorize]
+    [EnableRateLimiting(RateLimiterConfiguration.OtpPolicy)]
     [SwaggerOperation(
         Summary = "Xác thực email",
         Description = "Xác thực email bằng OTP nhận từ `/auth/send-verification`. " +
@@ -124,6 +130,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.8 POST /auth/forgot-password — Quên mật khẩu</summary>
     [HttpPost("forgot-password")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.OtpPolicy)]
     [SwaggerOperation(
         Summary = "Quên mật khẩu — Gửi OTP đặt lại",
         Description = "Gửi mã OTP 6 số đến email để đặt lại mật khẩu. OTP có hiệu lực 10 phút. " +
@@ -140,6 +147,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.9 POST /auth/reset-password — Đặt lại mật khẩu bằng OTP</summary>
     [HttpPost("reset-password")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.OtpPolicy)]
     [SwaggerOperation(
         Summary = "Đặt lại mật khẩu",
         Description = "Đặt lại mật khẩu mới bằng OTP nhận từ `/auth/forgot-password`. " +
@@ -156,6 +164,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.10 POST /auth/google-login — Đăng nhập bằng Google</summary>
     [HttpPost("google-login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.AuthPolicy)]
     [SwaggerOperation(
         Summary = "Đăng nhập bằng Google SSO",
         Description = "Xác thực ID Token từ Google SDK. Backend verify với Google, " +
@@ -174,6 +183,7 @@ public class AuthController : BaseApi.BaseApiController
     /// <summary>1.11 POST /auth/facebook-login — Đăng nhập bằng Facebook</summary>
     [HttpPost("facebook-login")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterConfiguration.AuthPolicy)]
     [SwaggerOperation(
         Summary = "Đăng nhập bằng Facebook SSO",
         Description = "Xác thực Access Token từ Facebook SDK bằng Graph API. " +
@@ -190,14 +200,3 @@ public class AuthController : BaseApi.BaseApiController
         return Ok(result);
     }
 }
-
-// Request DTOs
-public record RegisterRequest(string Email, string Password, string Name);
-public record LoginRequest(string Email, string Password);
-public record RefreshTokenRequest(string RefreshToken);
-public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
-public record VerifyEmailRequest(string Otp);
-public record ForgotPasswordRequest(string Email);
-public record ResetPasswordRequest(string Email, string Otp, string NewPassword);
-public record GoogleLoginRequest(string IdToken);
-public record FacebookLoginRequest(string AccessToken);

@@ -1,6 +1,7 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
+using AppPickleball.Application.Features.Users.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;

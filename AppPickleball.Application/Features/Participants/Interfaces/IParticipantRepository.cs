@@ -1,7 +1,8 @@
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
 
-namespace AppPickleball.Application.Common.Interfaces;
+namespace AppPickleball.Application.Features.Participants.Interfaces;
 
 public interface IParticipantRepository : IRepository<Participant>
 {

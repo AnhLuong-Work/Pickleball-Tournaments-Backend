@@ -1,6 +1,7 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
+using AppPickleball.Application.Features.Users.Interfaces;
 using AppPickleball.Application.Features.Users.DTOs;
 using AppPickleball.Domain.Enums;
 using MediatR;

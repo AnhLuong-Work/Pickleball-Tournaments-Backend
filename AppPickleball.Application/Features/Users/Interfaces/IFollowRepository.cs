@@ -1,6 +1,7 @@
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Entities;
 
-namespace AppPickleball.Application.Common.Interfaces;
+namespace AppPickleball.Application.Features.Users.Interfaces;
 
 public interface IFollowRepository : IRepository<Follow>
 {

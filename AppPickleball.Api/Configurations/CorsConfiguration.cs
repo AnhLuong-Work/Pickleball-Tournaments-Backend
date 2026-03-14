@@ -2,16 +2,29 @@ namespace AppPickleball.Api.Configurations
 {
     public static class CorsConfiguration
     {
-        public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
+        public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
         {
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowWebClients", builder =>
                 {
-                    builder.SetIsOriginAllowed(origin => true) // Allow all origins for testing
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials(); // Bắt buộc cho cookie-based auth
+                    if (environment.IsDevelopment())
+                    {
+                        // Dev: cho phép tất cả origins để tiện test local
+                        builder.SetIsOriginAllowed(_ => true)
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
+                    else
+                    {
+                        // Production: chỉ cho phép origins được cấu hình trong appsettings
+                        var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [];
+                        builder.WithOrigins(allowedOrigins)
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
                 });
             });
 

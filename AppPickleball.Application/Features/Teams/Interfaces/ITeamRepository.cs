@@ -1,6 +1,7 @@
+using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Domain.Entities;
 
-namespace AppPickleball.Application.Common.Interfaces;
+namespace AppPickleball.Application.Features.Teams.Interfaces;
 
 public interface ITeamRepository : IRepository<Team>
 {

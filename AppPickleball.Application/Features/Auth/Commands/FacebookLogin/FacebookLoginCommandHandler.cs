@@ -1,6 +1,8 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Settings;
+using AppPickleball.Application.Features.Auth.Interfaces;
+using AppPickleball.Application.Features.Users.Interfaces;
 using AppPickleball.Application.Features.Auth.DTOs;
 using AppPickleball.Domain.Entities;
 using MediatR;

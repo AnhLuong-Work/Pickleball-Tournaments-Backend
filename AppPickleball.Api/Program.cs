@@ -1,4 +1,4 @@
-﻿using AppPickleball.Api.Configurations;
+using AppPickleball.Api.Configurations;
 using AppPickleball.Api.Middleware;
 using AppPickleball.Application;
 using AppPickleball.Infrastructure;
@@ -10,22 +10,23 @@ using System.Text;
 Console.OutputEncoding = Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
+var env = builder.Environment;
 
 // Đăng ký Serilog — đọc config từ appsettings.json section "Serilog"
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddApiDependencies(config);
-builder.Services.AddJwtSettings(config);
 builder.Services.AddAllSettings(config);
 builder.Services.AddApiControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerModule();
 //builder.Services.AddMassTransitConfig(config);
 builder.Services.AddAppLocalization();
-builder.Services.AddCorsPolicy();
-builder.Services.AddHealthChecks(config);
+builder.Services.AddCorsPolicy(config, env);
+builder.Services.AddHealthChecksConfig(config);
 builder.Services.AddApiVersioningConfig();
+builder.Services.AddRateLimiterConfig();
 
 // Add layers
 builder.Services.AddApplication();
@@ -40,22 +41,30 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-// Configure the HTTP request pipeline.
-// Correlation ID — phải đặt đầu tiên để track toàn bộ request lifecycle
+// ─── Middleware pipeline ───
+// Thứ tự quan trọng: CorrelationId → ExceptionHandler trước hết để catch mọi lỗi
+
+// 1. Correlation ID — đặt đầu tiên để track toàn bộ request lifecycle
 app.UseMiddleware<CorrelationIdMiddleware>();
+
+// 2. Exception handler — đặt sớm để bắt lỗi từ mọi middleware phía sau
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// 3. Rate limiting — chặn trước khi request vào pipeline
+app.UseRateLimiter();
+
 app.UseAppLocalization();
 app.UseHttpsRedirection();
 app.UseCors("AllowWebClients");
-app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.UseHealthChecksEndpoints();
 
 app.Run();
-

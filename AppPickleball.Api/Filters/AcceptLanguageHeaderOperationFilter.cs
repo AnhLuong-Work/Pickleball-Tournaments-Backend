@@ -8,11 +8,7 @@ namespace AppPickleball.Api.Filters
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            //if (operation.Parameters == null)
-            //    operation.Parameters = new List<OpenApiParameter>();
-            //#pragma warning disable IDE0028 // Collection initialization can be simplified
             operation.Parameters ??= new List<OpenApiParameter>();
-            //#pragma warning restore IDE0028
 
             operation.Parameters.Add(new OpenApiParameter
             {
@@ -23,17 +19,7 @@ namespace AppPickleball.Api.Filters
                 Schema = new OpenApiSchema
                 {
                     Type = "string",
-                    //Enum = new List<IOpenApiAny>
-                    //{
-                    //    new OpenApiString("vi"),
-                    //    new OpenApiString("en")
-                    //},
-                    // tương đương với cách viết trên nhưng dùng cú pháp khởi tạo danh sách rút gọn
-                    Enum =
-                    [
-                        new OpenApiString("vi"),
-                        new OpenApiString("en")
-                    ],
+                    Enum = [new OpenApiString("vi"), new OpenApiString("en")],
                     Default = new OpenApiString("vi")
                 }
             });

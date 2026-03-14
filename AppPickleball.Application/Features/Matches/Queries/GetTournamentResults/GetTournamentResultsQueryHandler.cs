@@ -1,6 +1,8 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Features.Matches.DTOs;
+using AppPickleball.Application.Features.Participants.Interfaces;
+using AppPickleball.Application.Features.Tournaments.Interfaces;
 using AppPickleball.Application.Features.Matches.Queries.GetGroupStandings;
 using MediatR;
 using Shared.Kernel.Wrappers;

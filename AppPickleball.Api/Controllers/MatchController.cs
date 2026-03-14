@@ -70,7 +70,7 @@ public class MatchController : BaseApi.BaseApiController
     public async Task<IActionResult> SubmitScore(Guid id, [FromBody] ScoreRequest request, CancellationToken ct)
     {
         var result = await _mediator.Send(new SubmitMatchScoreCommand(id, request.Player1Scores, request.Player2Scores, request.Reason), ct);
-        return Ok(result);
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     /// <summary>5.4 PUT /matches/:id/score — Sửa điểm trận đấu</summary>
@@ -122,5 +122,3 @@ public class MatchController : BaseApi.BaseApiController
         return Ok(result);
     }
 }
-
-public record ScoreRequest(int[] Player1Scores, int[] Player2Scores, string? Reason);

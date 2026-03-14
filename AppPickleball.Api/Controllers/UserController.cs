@@ -114,7 +114,7 @@ public class UserController : BaseApi.BaseApiController
     public async Task<IActionResult> Follow(Guid id, CancellationToken ct)
     {
         var result = await _mediator.Send(new FollowUserCommand(id), ct);
-        return StatusCode(204, result);
+        return result.Success ? StatusCode(204, result) : BadRequest(result);
     }
 
     /// <summary>2.8 DELETE /users/:id/follow — Bỏ theo dõi</summary>
@@ -128,7 +128,7 @@ public class UserController : BaseApi.BaseApiController
     public async Task<IActionResult> Unfollow(Guid id, CancellationToken ct)
     {
         var result = await _mediator.Send(new UnfollowUserCommand(id), ct);
-        return StatusCode(204, result);
+        return result.Success ? StatusCode(204, result) : BadRequest(result);
     }
 
     /// <summary>2.9 GET /users/:id — Profile công khai</summary>
@@ -165,5 +165,3 @@ public class UserController : BaseApi.BaseApiController
         return Ok(result);
     }
 }
-
-public record UpdateProfileRequest(string? Name, string? Bio, decimal? SkillLevel, string? DominantHand, string? PaddleType);

@@ -1,6 +1,9 @@
 using AppPickleball.Application.Common.Exceptions;
 using AppPickleball.Application.Common.Interfaces;
 using AppPickleball.Application.Common.Services;
+using AppPickleball.Application.Features.Matches.Interfaces;
+using AppPickleball.Application.Features.Participants.Interfaces;
+using AppPickleball.Application.Features.Tournaments.Interfaces;
 using AppPickleball.Application.Features.Matches.DTOs;
 using AppPickleball.Domain.Entities;
 using AppPickleball.Domain.Enums;
