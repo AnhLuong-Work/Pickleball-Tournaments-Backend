@@ -24,7 +24,6 @@ builder.Services.AddSwaggerModule();
 //builder.Services.AddMassTransitConfig(config);
 builder.Services.AddAppLocalization();
 builder.Services.AddCorsPolicy(config, env);
-builder.Services.AddHealthChecksConfig(config);
 builder.Services.AddApiVersioningConfig();
 builder.Services.AddRateLimiterConfig();
 
@@ -65,6 +64,5 @@ app.UseCors("AllowWebClients");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.UseHealthChecksEndpoints();
 
 app.Run();
